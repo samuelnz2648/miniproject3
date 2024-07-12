@@ -27,23 +27,29 @@ db.connect((err) => {
   console.log("Connected to the MySQL server.");
 });
 
+// Helper function to handle database queries
+const handleQuery = (sql, params, res, next) => {
+  db.query(sql, params, (err, result) => {
+    if (err) return next(err);
+    res.send(result);
+  });
+};
+
 // Create a new contact
 app.post("/api/contacts", (req, res, next) => {
   const { name, email, phone } = req.body;
   const sql = "INSERT INTO contacts (name, email, phone) VALUES (?, ?, ?)";
   db.query(sql, [name, email, phone], (err, result) => {
     if (err) return next(err);
-    res.send({ id: result.insertId, name, email, phone });
+    const newContact = { id: result.insertId, name, email, phone };
+    res.send(newContact);
   });
 });
 
 // Get all contacts
 app.get("/api/contacts", (req, res, next) => {
   const sql = "SELECT * FROM contacts";
-  db.query(sql, (err, results) => {
-    if (err) return next(err);
-    res.send(results);
-  });
+  handleQuery(sql, [], res, next);
 });
 
 // Update a contact
@@ -51,20 +57,14 @@ app.put("/api/contacts/:id", (req, res, next) => {
   const { id } = req.params;
   const { name, email, phone } = req.body;
   const sql = "UPDATE contacts SET name = ?, email = ?, phone = ? WHERE id = ?";
-  db.query(sql, [name, email, phone, id], (err, result) => {
-    if (err) return next(err);
-    res.send(result);
-  });
+  handleQuery(sql, [name, email, phone, id], res, next);
 });
 
 // Delete a contact
 app.delete("/api/contacts/:id", (req, res, next) => {
   const { id } = req.params;
   const sql = "DELETE FROM contacts WHERE id = ?";
-  db.query(sql, [id], (err, result) => {
-    if (err) return next(err);
-    res.send(result);
-  });
+  handleQuery(sql, [id], res, next);
 });
 
 // Error handling middleware
