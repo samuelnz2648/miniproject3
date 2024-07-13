@@ -1,12 +1,31 @@
 // frontend/src/ContactContext.js
 
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useReducer, useEffect } from "react";
 import axios from "axios";
 
 export const ContactContext = createContext();
 
+const initialState = [];
+
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "FETCH_CONTACTS":
+      return action.payload;
+    case "ADD_CONTACT":
+      return [...state, action.payload];
+    case "UPDATE_CONTACT":
+      return state.map((contact) =>
+        contact.id === action.payload.id ? action.payload : contact
+      );
+    case "DELETE_CONTACT":
+      return state.filter((contact) => contact.id !== action.payload);
+    default:
+      return state;
+  }
+};
+
 const ContactProvider = ({ children }) => {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
     fetchContacts();
@@ -14,10 +33,8 @@ const ContactProvider = ({ children }) => {
 
   const fetchContacts = async () => {
     try {
-      console.log("Fetching contacts");
       const res = await axios.get("http://localhost:3001/api/contacts");
-      setContacts(res.data);
-      console.log("Fetched contacts:", res.data);
+      dispatch({ type: "FETCH_CONTACTS", payload: res.data });
     } catch (error) {
       console.error("Error fetching contacts:", error);
       alert("There was an error fetching contacts. Please try again.");
@@ -26,12 +43,8 @@ const ContactProvider = ({ children }) => {
 
   const addContact = async (form) => {
     try {
-      console.log("Adding contact:", form);
       const res = await axios.post("http://localhost:3001/api/contacts", form);
-      const newContacts = [...contacts, res.data];
-      console.log("New contacts list after adding:", newContacts);
-      setContacts(newContacts);
-      console.log("Added contact:", res.data);
+      dispatch({ type: "ADD_CONTACT", payload: res.data });
     } catch (error) {
       console.error("Error adding contact:", error);
       alert("There was an error adding the contact. Please try again.");
@@ -40,12 +53,11 @@ const ContactProvider = ({ children }) => {
 
   const updateContact = async (id, updatedContact) => {
     try {
-      console.log("Updating contact:", { id, updatedContact });
       await axios.put(
         `http://localhost:3001/api/contacts/${id}`,
         updatedContact
       );
-      fetchContacts();
+      dispatch({ type: "UPDATE_CONTACT", payload: updatedContact });
     } catch (error) {
       console.error("Error updating contact:", error);
       alert("There was an error updating the contact. Please try again.");
@@ -54,9 +66,8 @@ const ContactProvider = ({ children }) => {
 
   const deleteContact = async (id) => {
     try {
-      console.log("Deleting contact with id:", id);
       await axios.delete(`http://localhost:3001/api/contacts/${id}`);
-      fetchContacts();
+      dispatch({ type: "DELETE_CONTACT", payload: id });
     } catch (error) {
       console.error("Error deleting contact:", error);
       alert("There was an error deleting the contact. Please try again.");

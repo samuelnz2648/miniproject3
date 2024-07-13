@@ -17,39 +17,32 @@ const App = () => {
 
   const handleRowChange = (e, id) => {
     const { name, value } = e.target;
-    const updatedContacts = contacts.map((contact) =>
-      contact.id === id ? { ...contact, [name]: value } : contact
-    );
-    const contact = updatedContacts.find((contact) => contact.id === id);
-    console.log("Row Change:", { id, contact });
-    updateContact(id, contact);
+    const updatedContact = {
+      ...contacts.find((contact) => contact.id === id),
+      [name]: value,
+    };
+    updateContact(id, updatedContact);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Submitting form:", form);
     await addContact(form);
     setForm({ name: "", email: "", phone: "" });
   };
 
   const handleEdit = (contact) => {
-    console.log("Editing contact:", contact);
     setEditingRow(contact.id);
   };
 
   const handleSave = (id) => {
     const contact = contacts.find((contact) => contact.id === id);
-    console.log("Saving contact:", { id, contact });
     updateContact(id, contact);
     setEditingRow(null);
   };
 
   const handleDelete = (id) => {
-    console.log("Deleting contact:", id);
     deleteContact(id);
   };
-
-  console.log("Rendered contacts:", contacts);
 
   return (
     <Container className="mt-5">
